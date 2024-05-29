@@ -43,7 +43,8 @@
   scene.add(ambientLight);
 
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(5, 5, 5).normalize();
+  directionalLight.position.set(0, 10, 0); // Position the light above the center
+  directionalLight.castShadow = true;
   scene.add(directionalLight);
 
   // Load model and create instances
@@ -108,14 +109,16 @@
   cameraCoordinates.innerText = `Camera Position: x=${camera.position.x.toFixed(2)}, y=${camera.position.y.toFixed(2)}, z=${camera.position.z.toFixed(2)}`;
  }
 
+
  function animate() {
   requestAnimationFrame(animate);
-  const delta = clock.getDelta();
+  const delta = clock.getDelta() * 0.2;
   scene.children.forEach(child => {
    if (child.userData && child.userData.angle !== undefined) {
     child.userData.angle += delta;
     child.position.x = Math.cos(child.userData.angle) * orbitRadius;
     child.position.z = Math.sin(child.userData.angle) * orbitRadius;
+    child.rotation.z += delta;
    }
   });
   render();
