@@ -16,8 +16,9 @@
  let camera, scene, renderer;
  let width = 500;
  let height = 400;
- let clock = new THREE.Clock();
- const orbitRadius = 4; // Increased radius for more distance
+ const clock = new THREE.Clock();
+ const orbitRadius = 4;
+ const cameraCoordinates = document.getElementById("camera-coordinates");
 
  init();
  animate();
@@ -32,9 +33,8 @@
   height = container.parentNode.offsetHeight || 400;
   console.log('Width:', width, 'Height:', height);
 
-  camera = new THREE.PerspectiveCamera(45, width / height, 0.25, 20);
-  camera.position.set(- 1.8, 0.6, 2.7);
-
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.25, 2000);
+  camera.position.set(7.85, 6.60, 16.37);
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000); // Set background to black
 
@@ -52,9 +52,9 @@
   loader.load('golf.gltf', function (gltf) {
    console.log('GLTF model loaded successfully');
    const golfBall = gltf.scene;
-   for (let i = 0; i < 5; i++) {
+   for (let i = 0; i < 6; i++) {
     const ball = golfBall.clone();
-    const angle = i * Math.PI * 2 / 5;
+    const angle = i * Math.PI * 2 / 6;
     ball.position.set(Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius);
     ball.userData = { angle };
     scene.add(ball);
@@ -74,13 +74,18 @@
   container.appendChild(renderer.domElement);
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.addEventListener('change', render); // use if there is no animation loop
+  controls.addEventListener('change', render);
   controls.minDistance = 2;
-  controls.maxDistance = 10;
+  controls.maxDistance = 100;
   controls.target.set(0, 0, - 0.2);
   controls.update();
+  controls.enabled = false; // Désactiver les contrôles de l'OrbitControls
+
 
   window.addEventListener('resize', onWindowResize);
+
+  // Add event listener for camera movement
+  controls.addEventListener('change', updateCameraCoordinates);
  }
 
  function onWindowResize() {
@@ -97,6 +102,10 @@
   renderer.setSize(width, height);
 
   render();
+ }
+
+ function updateCameraCoordinates() {
+  cameraCoordinates.innerText = `Camera Position: x=${camera.position.x.toFixed(2)}, y=${camera.position.y.toFixed(2)}, z=${camera.position.z.toFixed(2)}`;
  }
 
  function animate() {
@@ -117,3 +126,4 @@
  }
 </script>
 <div id="container"></div>
+<div id="camera-coordinates">Camera Position: x=0.00, y=0.00, z=0.00</div>
