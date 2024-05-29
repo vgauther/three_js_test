@@ -1,0 +1,119 @@
+<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.152.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.152.0/examples/jsm/"
+    }
+  }
+</script>
+<script type="module">
+ import * as THREE from 'three';
+ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+ let camera, scene, renderer;
+ let width = 500;
+ let height = 400;
+ let clock = new THREE.Clock();
+ const orbitRadius = 4; // Increased radius for more distance
+
+ init();
+ animate();
+
+ function init() {
+  const container = document.getElementById("container");
+  if (!container) {
+    console.error('Container element not found');
+    return;
+  }
+  width = container.parentNode.offsetWidth || 500;
+  height = container.parentNode.offsetHeight || 400;
+  console.log('Width:', width, 'Height:', height);
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.25, 20);
+  camera.position.set(- 1.8, 0.6, 2.7);
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000); // Set background to black
+
+  // Add lights
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(5, 5, 5).normalize();
+  scene.add(directionalLight);
+
+  // Load model and create instances
+  const loader = new GLTFLoader().setPath('https://cdn-nivo.com/wp-content/uploads/2024/05/');
+  console.log('Starting to load GLTF model');
+  loader.load('golf.gltf', function (gltf) {
+   console.log('GLTF model loaded successfully');
+   const golfBall = gltf.scene;
+   for (let i = 0; i < 5; i++) {
+    const ball = golfBall.clone();
+    const angle = i * Math.PI * 2 / 5;
+    ball.position.set(Math.cos(angle) * orbitRadius, 0, Math.sin(angle) * orbitRadius);
+    ball.userData = { angle };
+    scene.add(ball);
+   }
+   render();
+  }, function (xhr) {
+   console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+  }, function (error) {
+   console.error('An error occurred loading the GLTF model:', error);
+  });
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1;
+  container.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.addEventListener('change', render); // use if there is no animation loop
+  controls.minDistance = 2;
+  controls.maxDistance = 10;
+  controls.target.set(0, 0, - 0.2);
+  controls.update();
+
+  window.addEventListener('resize', onWindowResize);
+ }
+
+ function onWindowResize() {
+  const container = document.getElementById("container");
+  if (!container) {
+    console.error('Container element not found');
+    return;
+  }
+  width = container.parentNode.offsetWidth || 500;
+  height = container.parentNode.offsetHeight || 400;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(width, height);
+
+  render();
+ }
+
+ function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  scene.children.forEach(child => {
+   if (child.userData && child.userData.angle !== undefined) {
+    child.userData.angle += delta;
+    child.position.x = Math.cos(child.userData.angle) * orbitRadius;
+    child.position.z = Math.sin(child.userData.angle) * orbitRadius;
+   }
+  });
+  render();
+ }
+
+ function render() {
+  renderer.render(scene, camera);
+ }
+</script>
+<div id="container"></div>
